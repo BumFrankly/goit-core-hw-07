@@ -113,19 +113,23 @@ class AddressBook(UserDict):
 
 
 def add_birthday(args, book):
+    if len(args) < 2:
+        return "Not enough arguments. Please provide both name and birthday (DD.MM.YYYY)."
+    
     name, birthday = args
     record = book.find_record(name)
     if record:
         if record.birthday:
-            print(f"Birthday already exists for {name}.")
+            return f"Birthday already exists for {name}."
         else:
             try:
                 record.add_birthday(birthday)
-                print(f"Birthday added successfully for {name}.")
+                return f"Birthday added successfully for {name}."
             except ValueError as e:
-                print(f"Error adding birthday: {e}")
+                return f"Error adding birthday: {e}"
     else:
-        print("Record not found.")
+        return "Record not found."
+
 
 
 def show_birthday(args, book):
@@ -179,14 +183,14 @@ def main():
         elif command == "all":
             print(show_all(book))
 
-        elif command == "add-birthday":
-            add_birthday(args, book)
+        elif command == "add_birthday":
+            print(add_birthday(args, book))
 
-        elif command == "show-birthday":
-            show_birthday(args, book)
+        elif command == "show_birthday":
+            print(show_birthday(args, book))
 
         elif command == "birthdays":
-            birthdays(args, book)
+            print(birthdays(args, book))
 
         else:
             print("Invalid command.")
@@ -208,6 +212,8 @@ def add_contact(args, book: AddressBook):
 
 
 def change_contact(args, book: AddressBook):
+    if len(args) < 2:
+        return "Not enough arguments. Please provide both name and new phone number."
     name, new_phone = args
     record = book.find_record(name)
     if record:
@@ -221,13 +227,15 @@ def change_contact(args, book: AddressBook):
 
 
 def show_phones(args, book: AddressBook):
+    if len(args) < 1:
+        return "Not enough arguments. Please provide a name."
     name = args[0]
     record = book.find_record(name)
     if record:
         phones = ', '.join(phone.value for phone in record.phones)
         return f"Phones for {name}: {phones}"
     else:
-        return "Record not found."
+        return f"Record for {name} not found."
 
 
 def show_all(book: AddressBook):
