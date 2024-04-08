@@ -69,6 +69,30 @@ class Record:
                 return p
         return None
 
+    def get_upcoming_birthdays(self): 
+        upcoming_birthdays = []
+        today = datetime.today().date()
+
+        for record in self.data.values():
+            if record.birthday:
+                birthday = record.birthday.date
+
+                next_birthday = birthday.replace(year=today.year)
+                if next_birthday < today:
+                    next_birthday = next_birthday.replace(year=today.year + 1)
+
+                while next_birthday.weekday() >= 5:
+                    next_birthday += timedelta(days=1)
+
+                days_until_birthday = (next_birthday - today).days
+                if 0 <= days_until_birthday <= 7:
+                    upcoming_birthdays.append({
+                        "name": record.name.value,
+                        "congratulation_date": next_birthday.strftime("%d.%m.%Y")
+                    })
+
+        return upcoming_birthdays
+
     def add_birthday(self, birthday):
         try:
             self.birthday = Birthday(birthday)
@@ -101,30 +125,6 @@ class AddressBook(UserDict):
                 print(f"{name}: {record}")
         else:
             print("Address book is empty.")
-
-    def get_upcoming_birthdays(self):  # Перенесли метод в клас AddressBook
-        upcoming_birthdays = []
-        today = datetime.today().date()
-
-        for record in self.data.values():
-            if record.birthday:
-                birthday = record.birthday.date
-
-                next_birthday = birthday.replace(year=today.year)
-                if next_birthday < today:
-                    next_birthday = next_birthday.replace(year=today.year + 1)
-
-                while next_birthday.weekday() >= 5:
-                    next_birthday += timedelta(days=1)
-
-                days_until_birthday = (next_birthday - today).days
-                if 0 <= days_until_birthday <= 7:
-                    upcoming_birthdays.append({
-                        "name": record.name.value,
-                        "congratulation_date": next_birthday.strftime("%d.%m.%Y")
-                    })
-
-        return upcoming_birthdays
 
 
 def input_error(func):
@@ -179,50 +179,7 @@ def birthdays(args, book):
         return "Upcoming birthdays:\n" + "\n".join(name["name"] + " - " + name["congratulation_date"] for name in upcoming_birthdays)
     else:
         return "No upcoming birthdays in the next 7 days."
-
-
-def parse_input(user_input):
-    return user_input.split()
-
-
-def main():
-    book = AddressBook()
-    print("Welcome to the assistant bot!")
-    while True:
-        user_input = input("Enter a command: ")
-        command, *args = parse_input(user_input)
-
-        if command in ["close", "exit"]:
-            print("Good bye!")
-            break
-
-        elif command == "hello":
-            print("How can I help you?")
-
-        elif command == "add":
-            print(add_contact(args, book))
-
-        elif command == "change":
-            print(change_contact(args, book))
-
-        elif command == "phone":
-            print(show_phones(args, book))
-
-        elif command == "all":
-            print(show_all(book))
-
-        elif command == "add_birthday":
-            print(add_birthday(args, book))
-
-        elif command == "show_birthday":
-            print(show_birthday(args, book))
-
-        elif command == "birthdays":
-            print(birthdays(args, book))
-
-        else:
-            print("Invalid command.")
-
+  
 
 @input_error
 def add_contact(args, book: AddressBook):
@@ -275,6 +232,49 @@ def show_all(book: AddressBook):
         return "\n".join(f"{name}: {record}" for name, record in book.data.items())
     else:
         return "Address book is empty."
+
+
+def parse_input(user_input):
+    return user_input.split()
+
+
+def main():
+    book = AddressBook()
+    print("Welcome to the assistant bot!")
+    while True:
+        user_input = input("Enter a command: ")
+        command, *args = parse_input(user_input)
+
+        if command in ["close", "exit"]:
+            print("Good bye!")
+            break
+
+        elif command == "hello":
+            print("How can I help you?")
+
+        elif command == "add":
+            print(add_contact(args, book))
+
+        elif command == "change":
+            print(change_contact(args, book))
+
+        elif command == "phone":
+            print(show_phones(args, book))
+
+        elif command == "all":
+            print(show_all(book))
+
+        elif command == "add_birthday":
+            print(add_birthday(args, book))
+
+        elif command == "show_birthday":
+            print(show_birthday(args, book))
+
+        elif command == "birthdays":
+            print(birthdays(args, book))
+
+        else:
+            print("Invalid command.")
 
 
 if __name__ == "__main__":
