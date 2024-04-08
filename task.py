@@ -1,5 +1,5 @@
-from collections import UserDict
 from datetime import datetime, timedelta
+from collections import UserDict
 
 
 class Field:
@@ -102,16 +102,45 @@ class AddressBook(UserDict):
         else:
             print("Address book is empty.")
 
-    def get_upcoming_birthdays(self, days=7):
+    def get_upcoming_birthdays(self):  # Перенесли метод в клас AddressBook
         upcoming_birthdays = []
-        today = datetime.now().date()
+        today = datetime.today().date()
+
         for record in self.data.values():
             if record.birthday:
-                if (record.birthday.date - today).days <= days:
-                    upcoming_birthdays.append(record.name.value)
+                birthday = record.birthday.date
+
+                next_birthday = birthday.replace(year=today.year)
+                if next_birthday < today:
+                    next_birthday = next_birthday.replace(year=today.year + 1)
+
+                while next_birthday.weekday() >= 5:
+                    next_birthday += timedelta(days=1)
+
+                days_until_birthday = (next_birthday - today).days
+                if 0 <= days_until_birthday <= 7:
+                    upcoming_birthdays.append({
+                        "name": record.name.value,
+                        "congratulation_date": next_birthday.strftime("%d.%m.%Y")
+                    })
+
         return upcoming_birthdays
 
 
+def input_error(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except KeyError:
+            return "KeyError"
+        except ValueError as e:
+            return f"ValueError: {e}"
+        except IndexError:
+            return "IndexError"
+    return wrapper
+
+
+@input_error
 def add_birthday(args, book):
     if len(args) < 2:
         return "Not enough arguments. Please provide both name and birthday (DD.MM.YYYY)."
@@ -131,26 +160,25 @@ def add_birthday(args, book):
         return "Record not found."
 
 
-
+@input_error
 def show_birthday(args, book):
     name = args[0]
     record = book.find_record(name)
     if record and record.birthday:
-        print(f"{name}'s birthday: {record.birthday.value}")
+        return f"{name}'s birthday: {record.birthday.value}"
     elif record:
-        print(f"{name} has no birthday information.")
+        return f"{name} has no birthday information."
     else:
-        print("Record not found.")
+        return "Record not found."
 
 
+@input_error
 def birthdays(args, book):
     upcoming_birthdays = book.get_upcoming_birthdays()
     if upcoming_birthdays:
-        print("Upcoming birthdays:")
-        for name in upcoming_birthdays:
-            print(name)
+        return "Upcoming birthdays:\n" + "\n".join(name["name"] + " - " + name["congratulation_date"] for name in upcoming_birthdays)
     else:
-        print("No upcoming birthdays in the next 7 days.")
+        return "No upcoming birthdays in the next 7 days."
 
 
 def parse_input(user_input):
@@ -196,6 +224,7 @@ def main():
             print("Invalid command.")
 
 
+@input_error
 def add_contact(args, book: AddressBook):
     if len(args) < 2:
         return "Not enough arguments. Please provide both name and phone number."
@@ -211,6 +240,7 @@ def add_contact(args, book: AddressBook):
     return message
 
 
+@input_error
 def change_contact(args, book: AddressBook):
     if len(args) < 2:
         return "Not enough arguments. Please provide both name and new phone number."
@@ -226,6 +256,7 @@ def change_contact(args, book: AddressBook):
         return "Record not found."
 
 
+@input_error
 def show_phones(args, book: AddressBook):
     if len(args) < 1:
         return "Not enough arguments. Please provide a name."
@@ -238,6 +269,7 @@ def show_phones(args, book: AddressBook):
         return f"Record for {name} not found."
 
 
+@input_error
 def show_all(book: AddressBook):
     if book.data:
         return "\n".join(f"{name}: {record}" for name, record in book.data.items())
