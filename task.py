@@ -69,27 +69,26 @@ class Record:
                 return p
         return None
 
-    def get_upcoming_birthdays(self): 
+    def get_upcoming_birthdays(self):
         upcoming_birthdays = []
         today = datetime.today().date()
 
-        for record in self.data.values():
-            if record.birthday:
-                birthday = record.birthday.date
+        if self.birthday:
+            birthday = self.birthday.date
 
-                next_birthday = birthday.replace(year=today.year)
-                if next_birthday < today:
-                    next_birthday = next_birthday.replace(year=today.year + 1)
+            next_birthday = birthday.replace(year=today.year)
+            if next_birthday < today:
+                next_birthday = next_birthday.replace(year=today.year + 1)
 
-                while next_birthday.weekday() >= 5:
-                    next_birthday += timedelta(days=1)
+            while next_birthday.weekday() >= 5:
+                next_birthday += timedelta(days=1)
 
-                days_until_birthday = (next_birthday - today).days
-                if 0 <= days_until_birthday <= 7:
-                    upcoming_birthdays.append({
-                        "name": record.name.value,
-                        "congratulation_date": next_birthday.strftime("%d.%m.%Y")
-                    })
+            days_until_birthday = (next_birthday - today).days
+            if 0 <= days_until_birthday <= 7:
+                upcoming_birthdays.append({
+                    "name": self.name.value,
+                    "congratulation_date": next_birthday.strftime("%d.%m.%Y")
+                })
 
         return upcoming_birthdays
 
@@ -173,13 +172,21 @@ def show_birthday(args, book):
 
 
 @input_error
-def birthdays(args, book):
-    upcoming_birthdays = book.get_upcoming_birthdays()
-    if upcoming_birthdays:
-        return "Upcoming birthdays:\n" + "\n".join(name["name"] + " - " + name["congratulation_date"] for name in upcoming_birthdays)
+def birthdays(args, book):  
+    upcoming_birthdays = []
+    for record in book.data.values():
+        if record.birthday:
+            upcoming_birthdays.extend(record.get_upcoming_birthdays())
+
+    upcoming_birthday_names = []
+    for user in upcoming_birthdays:
+        upcoming_birthday_names.append(user["name"] + " - " + user["congratulation_date"])
+
+    if upcoming_birthday_names:
+        return "Upcoming birthdays:\n" + "\n".join(upcoming_birthday_names)
     else:
         return "No upcoming birthdays in the next 7 days."
-  
+
 
 @input_error
 def add_contact(args, book: AddressBook):
